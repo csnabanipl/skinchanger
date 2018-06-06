@@ -18,7 +18,6 @@ git clone https://github.com/ESX-Org/skinchanger skinchanger
 
 ## Installation
 - Add this to your `server.cfg`:
-
 ```
 start skinchanger
 ```
@@ -29,7 +28,7 @@ start skinchanger
 local isMale = true
 
 local skin = {
-	sex          = 1,
+	sex          = 332,
 	face         = 0,
 	skin         = 0,
 	beard_1      = 0,
