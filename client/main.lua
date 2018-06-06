@@ -45,7 +45,7 @@ local Components = {
   {label = _U('chain_2'),               name = 'chain_2',       value = 0,  min = 0,  zoomOffset = 0.6,   camOffset = 0.65, textureof = 'chain_1'},
   {label = _U('helmet_1'),              name = 'helmet_1',      value = -1, min = -1, zoomOffset = 0.6,   camOffset = 0.65, componentId = 0 },
   {label = _U('helmet_2'),              name = 'helmet_2',      value = 0,  min = 0,  zoomOffset = 0.6,   camOffset = 0.65, textureof = 'helmet_1'},
-  {label = _U('glasses_1'),             name = 'glasses_1',     value = 0,  min = 0,  zoomOffset = 0.6,   camOffset = 0.65},
+  {label = _U('glasses_1'),             name = 'glasses_1',     value = -1,  min = -1,  zoomOffset = 0.6,   camOffset = 0.65},
   {label = _U('glasses_2'),             name = 'glasses_2',     value = 0,  min = 0,  zoomOffset = 0.6,   camOffset = 0.65, textureof = 'glasses_1'},
   {label = _U('bag'),                   name = 'bags_1',        value = 0,  min = 0,  zoomOffset = 0.75,  camOffset = 0.15},
   {label = _U('bag_color'),             name = 'bags_2',        value = 0,  min = 0,  zoomOffset = 0.75,  camOffset = 0.15, textureof = 'bags_1'}
@@ -102,7 +102,7 @@ function GetMaxVals()
   local playerPed = GetPlayerPed(-1)
 
   local data = {
-    sex           = 1,
+    sex           = 332,
     face          = 45,
     skin          = 45,
     age_1         = GetNumHeadOverlayValues(3)-1,
@@ -303,16 +303,23 @@ end)
 RegisterNetEvent('skinchanger:loadSkin')
 AddEventHandler('skinchanger:loadSkin', function(skin, cb)
 
+  local playerPed = GetPlayerPed(-1)
+  local characterModel
+    
   if skin['sex'] ~= LastSex then
 
     LoadSkin = skin
 
     if skin['sex'] == 0 then
       TriggerEvent('skinchanger:loadDefaultModel', true, cb)
+   	elseif skin['sex'] > 1 then
+	    characterModel = pedList[skin.sex - 1]
     else
       TriggerEvent('skinchanger:loadDefaultModel', false, cb)
     end
 
+  RequestModel(characterModel)
+      
   else
 
     ApplySkin(skin)
@@ -324,12 +331,32 @@ AddEventHandler('skinchanger:loadSkin', function(skin, cb)
   end
 
   LastSex = skin['sex']
+    
+  Citizen.CreateThread(function()
+
+    while not HasModelLoaded(characterModel) do
+      RequestModel(characterModel)
+      Citizen.Wait(0)
+    end
+
+    if IsModelInCdimage(characterModel) and IsModelValid(characterModel) then
+      SetPlayerModel(PlayerId(), characterModel)
+      SetPedDefaultComponentVariation(playerPed)
+    end
+
+    SetModelAsNoLongerNeeded(characterModel)
+    TriggerEvent('skinchanger:modelLoaded')
+
+  end)
 
 end)
 
 RegisterNetEvent('skinchanger:loadClothes')
 AddEventHandler('skinchanger:loadClothes', function(playerSkin, clothesSkin)
 
+  local playerPed = GetPlayerPed(-1)
+  local characterModel    
+    
   if playerSkin['sex'] ~= LastSex then
 
     LoadClothes = {
@@ -339,14 +366,35 @@ AddEventHandler('skinchanger:loadClothes', function(playerSkin, clothesSkin)
 
     if playerSkin['sex'] == 0 then
       TriggerEvent('skinchanger:loadDefaultModel', true)
+    elseif playerSkin['sex'] > 1 then
+	    characterModel = pedList[playerSkin.sex - 1]
     else
       TriggerEvent('skinchanger:loadDefaultModel', false)
     end
 
+    RequestModel(characterModel)
+      
   else
     ApplySkin(playerSkin, clothesSkin)
   end
 
   LastSex = playerSkin['sex']
 
+  Citizen.CreateThread(function()
+
+    while not HasModelLoaded(characterModel) do
+      RequestModel(characterModel)
+      Citizen.Wait(0)
+    end
+
+    if IsModelInCdimage(characterModel) and IsModelValid(characterModel) then
+      SetPlayerModel(PlayerId(), characterModel)
+      SetPedDefaultComponentVariation(playerPed)
+    end
+
+    SetModelAsNoLongerNeeded(characterModel)
+    TriggerEvent('skinchanger:modelLoaded')
+
+  end)
+    
 end)
